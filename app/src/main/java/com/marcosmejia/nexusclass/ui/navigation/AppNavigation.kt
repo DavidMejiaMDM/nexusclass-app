@@ -16,6 +16,16 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import com.marcosmejia.nexusclass.ui.screens.tareas.DetalleTareaScreen
+import com.marcosmejia.nexusclass.ui.screens.tareas.FormTareaScreen
+import com.marcosmejia.nexusclass.ui.screens.tareas.TareasScreen
+import com.marcosmejia.nexusclass.ui.util.Avisos
+
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -51,10 +61,14 @@ fun AppNavigation() {
     val entradaActual by nav.currentBackStackEntryAsState()
     val rutaActual = entradaActual?.destination?.route
     val mostrarBarra = tabs.any { it.ruta == rutaActual }
+    val snackbar = remember { SnackbarHostState() }
+    LaunchedEffect(Unit) { Avisos.flujo.collect { snackbar.showSnackbar(it) } }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = { if (mostrarBarra) BarraInferior(nav, rutaActual) }
     ) { padding ->
+
         NavHost(
             navController = nav,
             startDestination = Rutas.HOY,
@@ -107,11 +121,12 @@ fun AppNavigation() {
                 ))
             }
             composable(Rutas.TAREAS) {
-                PantallaEnConstruccion("Tareas y parciales", listOf(
-                    Accion("Nueva tarea") { nav.navigate(Rutas.formTarea()) },
-                    Accion("Detalle de tarea (prueba)") { nav.navigate(Rutas.detalleTarea("xyz789")) }
-                ))
+                TareasScreen(
+                    onTarea = { nav.navigate(Rutas.detalleTarea(it)) },
+                    onNueva = { nav.navigate(Rutas.formTarea()) }
+                )
             }
+
             composable(Rutas.AJUSTES) {
                 PantallaEnConstruccion("Ajustes", listOf(
                     Accion("Actualizar horario (PDF)") { nav.navigate(Rutas.CARGA_PDF) }
@@ -137,26 +152,26 @@ fun AppNavigation() {
             composable(
                 Rutas.DETALLE_TAREA,
                 arguments = listOf(navArgument("tareaId") { type = NavType.StringType })
-            ) { entrada ->
-                val id = entrada.arguments?.getString("tareaId").orEmpty()
-                PantallaEnConstruccion("Detalle de tarea\nid = $id", listOf(
-                    Accion("Editar") { nav.navigate(Rutas.formTarea(tareaId = id)) },
-                    Accion("Volver") { nav.popBackStack() }
-                ))
+            ) {
+                DetalleTareaScreen(
+                    onVolver = { nav.popBackStack() },
+                    onEditar = { nav.navigate(Rutas.formTarea(tareaId = it)) },
+                    onClase = { nav.navigate(Rutas.detalleClase(it)) }
+                )
             }
+
             composable(
                 Rutas.FORM_TAREA,
                 arguments = listOf(
                     navArgument("claseId") { type = NavType.StringType; nullable = true; defaultValue = null },
                     navArgument("tareaId") { type = NavType.StringType; nullable = true; defaultValue = null }
                 )
-            ) { entrada ->
-                val claseId = entrada.arguments?.getString("claseId")
-                val tareaId = entrada.arguments?.getString("tareaId")
-                val titulo = if (tareaId != null) "Editar tarea" else "Nueva tarea"
-                PantallaEnConstruccion("$titulo\nclaseId = $claseId\ntareaId = $tareaId", listOf(
-                    Accion("Cancelar") { nav.popBackStack() }
-                ))
+            ) {
+                FormTareaScreen(
+                    onVolver = { nav.popBackStack() },
+                    // Si se elimina desde el formulario, se cierra también el detalle (ya no existe)
+                    onEliminada = { nav.popBackStack(Rutas.DETALLE_TAREA, inclusive = true) }
+                )
             }
         }
     }
