@@ -27,9 +27,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.marcosmejia.nexusclass.ui.screens.PruebaConexion
 import com.marcosmejia.nexusclass.ui.components.Accion
 import com.marcosmejia.nexusclass.ui.components.PantallaEnConstruccion
+import com.marcosmejia.nexusclass.ui.screens.hoy.HoyScreen
 
 private data class TabItem(
     val ruta: String,
@@ -86,7 +86,20 @@ fun AppNavigation() {
 
             // ---------- Pestañas principales ----------
             composable(Rutas.HOY) {
-                PruebaConexion()
+                HoyScreen(
+                    onClase = { nav.navigate(Rutas.detalleClase(it)) },
+                    onTarea = { nav.navigate(Rutas.detalleTarea(it)) },
+                    onNuevaTarea = { nav.navigate(Rutas.formTarea()) },
+                    onHorario = {
+                        nav.navigate(Rutas.HORARIO) {
+                            popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onNotificaciones = { nav.navigate(Rutas.NOTIFICACIONES) },
+                    onCargarHorario = { nav.navigate(Rutas.CARGA_PDF) }
+                )
             }
             composable(Rutas.HORARIO) {
                 PantallaEnConstruccion("Horario semanal", listOf(
