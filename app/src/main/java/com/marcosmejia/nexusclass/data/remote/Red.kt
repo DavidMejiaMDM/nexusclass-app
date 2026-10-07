@@ -10,8 +10,7 @@ object Red {
 
     const val BASE_URL = "https://organizador-api-g3vc.onrender.com/api/v1/"
 
-    // Si pruebas con la API local en tu PC (emulador): "http://10.0.2.2:3000/api/v1/"
-    // (en ese caso necesitas android:usesCleartextTraffic="true" en el Manifest)
+    // Para la API local del PC (emulador): "http://10.0.2.2:3000/api/v1/"
 
     private val cliente = OkHttpClient.Builder()
         // 60 s: Render gratis tarda en "despertar" tras 15 min sin uso

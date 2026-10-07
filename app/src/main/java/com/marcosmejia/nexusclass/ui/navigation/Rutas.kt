@@ -16,12 +16,16 @@ object Rutas {
     const val DETALLE_CLASE = "clase/{claseId}"
     const val DETALLE_TAREA = "tarea/{tareaId}"
     const val FORM_TAREA = "form_tarea?claseId={claseId}&tareaId={tareaId}"
+    const val EDITAR_CLASE = "editar_clase?claseId={claseId}"
 
     fun detalleClase(id: String) = "clase/$id"
     fun detalleTarea(id: String) = "tarea/$id"
 
-    // Sin parámetros = crear tarea libre; con claseId = crear para una asignatura;
-    // con tareaId = editar
+    // Sin id = crear asignatura a mano; con id = editar
+    fun formClase(claseId: String? = null) =
+        if (claseId == null) "editar_clase" else "editar_clase?claseId=$claseId"
+
+    // Sin parámetros = crear tarea libre; con claseId = crear para una asignatura; con tareaId = editar
     fun formTarea(claseId: String? = null, tareaId: String? = null): String {
         val params = listOfNotNull(
             claseId?.let { "claseId=$it" },
