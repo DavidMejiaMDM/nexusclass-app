@@ -20,8 +20,6 @@ class HoyViewModel(
     private val tareaRepo: TareaRepository = TareaRepository()
 ) : ViewModel() {
 
-    // PARA PRUEBAS: pon una fecha como "2026-10-05T08:30:00" para simular una hora.
-    // Déjalo en null para usar la hora real.
     private val simular: String? = null
 
     data class Datos(val hoy: TodayResponse, val urgentes: List<TareaDto>)
