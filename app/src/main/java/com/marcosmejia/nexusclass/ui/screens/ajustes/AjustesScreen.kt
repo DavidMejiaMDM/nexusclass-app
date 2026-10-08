@@ -29,6 +29,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.marcosmejia.nexusclass.data.local.Preferencias
+import com.marcosmejia.nexusclass.notifications.Alertas
 import com.marcosmejia.nexusclass.ui.components.DialogoConfirmar
 import com.marcosmejia.nexusclass.ui.theme.RojoError
 import com.marcosmejia.nexusclass.ui.util.Avisos
@@ -138,6 +139,13 @@ fun AjustesScreen(
                 }
             }
             // PASO 12: aquí va el botón «Revisar entregas ahora»
+            HorizontalDivider()
+            FilaAccion(
+                Icons.Outlined.NotificationsActive,
+                "Revisar entregas ahora",
+                "Envía las alertas pendientes en este momento",
+                onClick = { Alertas.revisarAhora(contexto) }
+            )
         }
 
         // ----- Apariencia -----

@@ -21,8 +21,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.marcosmejia.nexusclass.ui.components.Accion
-import com.marcosmejia.nexusclass.ui.components.PantallaEnConstruccion
 import com.marcosmejia.nexusclass.ui.screens.ajustes.AjustesScreen
 import com.marcosmejia.nexusclass.ui.screens.carga.CargaPdfScreen
 import com.marcosmejia.nexusclass.ui.screens.carga.RevisionScreen
@@ -34,6 +32,10 @@ import com.marcosmejia.nexusclass.ui.screens.tareas.DetalleTareaScreen
 import com.marcosmejia.nexusclass.ui.screens.tareas.FormTareaScreen
 import com.marcosmejia.nexusclass.ui.screens.tareas.TareasScreen
 import com.marcosmejia.nexusclass.ui.util.Avisos
+import com.marcosmejia.nexusclass.data.local.Preferencias
+import com.marcosmejia.nexusclass.ui.screens.inicio.OnboardingScreen
+import com.marcosmejia.nexusclass.ui.screens.inicio.SplashScreen
+import com.marcosmejia.nexusclass.ui.screens.notificaciones.NotificacionesScreen
 
 private data class TabItem(
     val ruta: String,
@@ -82,16 +84,33 @@ fun AppNavigation() {
     ) { padding ->
         NavHost(
             navController = nav,
-            startDestination = Rutas.HOY,
+            startDestination = Rutas.SPLASH,
             modifier = Modifier.padding(padding)
         ) {
             // ---------- Flujo inicial ----------
             composable(Rutas.SPLASH) {
-                PantallaEnConstruccion("Splash", listOf(Accion("Ir a Hoy") { nav.irAHoy() }))
+                SplashScreen(onListo = { primeraVez ->
+                    if (primeraVez) {
+                        nav.navigate(Rutas.ONBOARDING) { popUpTo(nav.graph.id) { inclusive = true } }
+                    } else {
+                        nav.irAHoy()
+                    }
+                })
             }
             composable(Rutas.ONBOARDING) {
-                PantallaEnConstruccion("Onboarding", listOf(Accion("Ir a cargar horario") { nav.navigate(Rutas.CARGA_PDF) }))
+                OnboardingScreen(onTerminar = {
+                    Preferencias.onboardingVisto = true
+                    nav.navigate(Rutas.CARGA_PDF) { popUpTo(nav.graph.id) { inclusive = true } }
+                })
             }
+
+            composable(Rutas.NOTIFICACIONES) {
+                NotificacionesScreen(
+                    onVolver = { nav.popBackStack() },
+                    onTarea = { nav.navigate(Rutas.detalleTarea(it)) }
+                )
+            }
+
             composable(Rutas.CARGA_PDF) {
                 CargaPdfScreen(
                     onVolver = { if (nav.previousBackStackEntry != null) nav.popBackStack() else nav.irAHoy() },
@@ -140,9 +159,7 @@ fun AppNavigation() {
             }
 
             // ---------- Pantallas secundarias ----------
-            composable(Rutas.NOTIFICACIONES) {
-                PantallaEnConstruccion("Notificaciones", listOf(Accion("Volver") { nav.popBackStack() }))
-            }
+
             composable(
                 Rutas.DETALLE_CLASE,
                 arguments = listOf(navArgument("claseId") { type = NavType.StringType })
