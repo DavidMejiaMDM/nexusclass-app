@@ -2,6 +2,10 @@ package com.marcosmejia.nexusclass.ui.navigation
 
 object Rutas {
     const val SPLASH = "splash"
+
+    const val LOGIN = "login"
+
+    const val REGISTRO = "registro"
     const val ONBOARDING = "onboarding"
     const val CARGA_PDF = "carga_pdf"
     const val REVISION = "revision"

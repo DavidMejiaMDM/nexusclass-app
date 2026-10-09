@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.marcosmejia.nexusclass.data.local.Preferencias
+import com.marcosmejia.nexusclass.data.local.Sesion
 import com.marcosmejia.nexusclass.data.remote.Resultado
 import com.marcosmejia.nexusclass.data.repository.TareaRepository
 import com.marcosmejia.nexusclass.ui.util.Avisos
@@ -13,6 +14,8 @@ class AlertaWorker(contexto: Context, params: WorkerParameters) : CoroutineWorke
 
     override suspend fun doWork(): Result {
         Preferencias.iniciar(applicationContext)
+        Sesion.iniciar(applicationContext)
+        if (Sesion.token == null) return Result.success()          // sin sesión no hay alertas
         if (!Preferencias.notificaciones.value) return Result.success()
 
         val forzar = inputData.getBoolean("forzar", false)   // true = botón «Revisar ahora»

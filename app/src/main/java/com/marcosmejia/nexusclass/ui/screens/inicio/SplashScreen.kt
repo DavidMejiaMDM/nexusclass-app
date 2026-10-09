@@ -64,7 +64,7 @@ fun SplashScreen(onListo: (primeraVez: Boolean) -> Unit) {
                 }
             } else {
                 Image(
-                    painter = painterResource(R.drawable.nexus_class),
+                    painter = painterResource(R.drawable.logo_app),
                     contentDescription = "Logo de Organizador UA",
                     modifier = Modifier.size(140.dp),
                     contentScale = ContentScale.Fit

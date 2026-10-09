@@ -8,16 +8,41 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.UploadFile
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +54,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.marcosmejia.nexusclass.data.local.Preferencias
+import com.marcosmejia.nexusclass.data.local.Sesion
 import com.marcosmejia.nexusclass.notifications.Alertas
 import com.marcosmejia.nexusclass.ui.components.DialogoConfirmar
 import com.marcosmejia.nexusclass.ui.theme.RojoError
@@ -41,14 +67,14 @@ fun AjustesScreen(
     vm: AjustesViewModel = viewModel()
 ) {
     val contexto = LocalContext.current
-    val nombre by Preferencias.nombre.collectAsStateWithLifecycle()
+    val usuario by Sesion.usuario.collectAsStateWithLifecycle()
     val tema by Preferencias.tema.collectAsStateWithLifecycle()
     val notif by Preferencias.notificaciones.collectAsStateWithLifecycle()
     val horas by Preferencias.anticipacionHoras.collectAsStateWithLifecycle()
     val eliminando by vm.eliminando.collectAsStateWithLifecycle()
 
-    var dialogoNombre by remember { mutableStateOf(false) }
     var dialogoAcerca by remember { mutableStateOf(false) }
+    var dialogoSalir by remember { mutableStateOf(false) }
     var dialogoBorrar by remember { mutableStateOf(false) }
 
     val permiso = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
@@ -65,6 +91,7 @@ fun AjustesScreen(
         }
     }
 
+    val nombre = usuario?.nombre.orEmpty()
     val iniciales = nombre.trim().split(" ").filter { it.isNotEmpty() }
         .take(2).joinToString("") { it.first().uppercase() }.ifEmpty { "UA" }
 
@@ -77,10 +104,10 @@ fun AjustesScreen(
     ) {
         Text("Ajustes", style = MaterialTheme.typography.headlineMedium)
 
-        // ----- Perfil -----
+        // ----- Perfil (datos de la cuenta) -----
         Panel {
             Row(
-                Modifier.fillMaxWidth().clickable { dialogoNombre = true }.padding(16.dp),
+                Modifier.fillMaxWidth().padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -93,12 +120,11 @@ fun AjustesScreen(
                 Column(Modifier.weight(1f)) {
                     Text(nombre.ifBlank { "Estudiante" }, style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "Uniautónoma del Cauca · toca para cambiar tu nombre",
+                        usuario?.email.orEmpty(),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Icon(Icons.Outlined.Edit, contentDescription = null)
             }
         }
 
@@ -138,7 +164,6 @@ fun AjustesScreen(
                     }
                 }
             }
-            // PASO 12: aquí va el botón «Revisar entregas ahora»
             HorizontalDivider()
             FilaAccion(
                 Icons.Outlined.NotificationsActive,
@@ -165,32 +190,20 @@ fun AjustesScreen(
             }
         }
 
-        // ----- Otros -----
+        // ----- Cuenta -----
+        Seccion("Cuenta")
         Panel {
             FilaAccion(Icons.Outlined.Info, "Acerca de la app", null, onClick = { dialogoAcerca = true })
             HorizontalDivider()
+            FilaAccion(Icons.AutoMirrored.Outlined.Logout, "Cerrar sesión", null, onClick = { dialogoSalir = true })
+            HorizontalDivider()
             FilaAccion(
-                Icons.Outlined.DeleteForever, "Eliminar todos mis datos",
-                if (eliminando) "Eliminando…" else "Borra tus clases y tareas",
+                Icons.Outlined.DeleteForever, "Eliminar mi cuenta",
+                if (eliminando) "Eliminando…" else "Borra tu cuenta, tus clases y tus tareas",
                 color = RojoError,
                 onClick = { if (!eliminando) dialogoBorrar = true }
             )
         }
-    }
-
-    if (dialogoNombre) {
-        var texto by remember { mutableStateOf(nombre) }
-        AlertDialog(
-            onDismissRequest = { dialogoNombre = false },
-            title = { Text("Tu nombre") },
-            text = {
-                OutlinedTextField(value = texto, onValueChange = { texto = it }, singleLine = true, label = { Text("Nombre") })
-            },
-            confirmButton = {
-                TextButton(onClick = { Preferencias.setNombre(texto.trim()); dialogoNombre = false }) { Text("Guardar") }
-            },
-            dismissButton = { TextButton(onClick = { dialogoNombre = false }) { Text("Cancelar") } }
-        )
     }
 
     if (dialogoAcerca) {
@@ -208,12 +221,22 @@ fun AjustesScreen(
         )
     }
 
+    if (dialogoSalir) {
+        AlertDialog(
+            onDismissRequest = { dialogoSalir = false },
+            title = { Text("¿Cerrar sesión?") },
+            text = { Text("Tus datos siguen guardados. Podrás volver a entrar con tu correo y contraseña.") },
+            confirmButton = { TextButton(onClick = { dialogoSalir = false; vm.cerrarSesion() }) { Text("Cerrar sesión") } },
+            dismissButton = { TextButton(onClick = { dialogoSalir = false }) { Text("Cancelar") } }
+        )
+    }
+
     if (dialogoBorrar) {
         DialogoConfirmar(
-            titulo = "¿Eliminar todos tus datos?",
-            texto = "Se borrarán todas tus asignaturas y tareas. Esta acción no se puede deshacer.",
-            textoConfirmar = "Eliminar todo",
-            onConfirmar = { dialogoBorrar = false; vm.eliminarTodo() },
+            titulo = "¿Eliminar tu cuenta?",
+            texto = "Se borrarán tu cuenta, tus asignaturas y tus tareas. Esta acción no se puede deshacer.",
+            textoConfirmar = "Eliminar cuenta",
+            onConfirmar = { dialogoBorrar = false; vm.eliminarCuenta() },
             onCancelar = { dialogoBorrar = false }
         )
     }

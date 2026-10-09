@@ -21,21 +21,23 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.marcosmejia.nexusclass.data.local.Preferencias
 import com.marcosmejia.nexusclass.ui.screens.ajustes.AjustesScreen
+import com.marcosmejia.nexusclass.ui.screens.auth.LoginScreen
+import com.marcosmejia.nexusclass.ui.screens.auth.RegistroScreen
 import com.marcosmejia.nexusclass.ui.screens.carga.CargaPdfScreen
 import com.marcosmejia.nexusclass.ui.screens.carga.RevisionScreen
 import com.marcosmejia.nexusclass.ui.screens.clase.ClaseFormScreen
 import com.marcosmejia.nexusclass.ui.screens.clase.DetalleClaseScreen
 import com.marcosmejia.nexusclass.ui.screens.horario.HorarioScreen
 import com.marcosmejia.nexusclass.ui.screens.hoy.HoyScreen
+import com.marcosmejia.nexusclass.ui.screens.inicio.OnboardingScreen
+import com.marcosmejia.nexusclass.ui.screens.inicio.SplashScreen
+import com.marcosmejia.nexusclass.ui.screens.notificaciones.NotificacionesScreen
 import com.marcosmejia.nexusclass.ui.screens.tareas.DetalleTareaScreen
 import com.marcosmejia.nexusclass.ui.screens.tareas.FormTareaScreen
 import com.marcosmejia.nexusclass.ui.screens.tareas.TareasScreen
 import com.marcosmejia.nexusclass.ui.util.Avisos
-import com.marcosmejia.nexusclass.data.local.Preferencias
-import com.marcosmejia.nexusclass.ui.screens.inicio.OnboardingScreen
-import com.marcosmejia.nexusclass.ui.screens.inicio.SplashScreen
-import com.marcosmejia.nexusclass.ui.screens.notificaciones.NotificacionesScreen
 
 private data class TabItem(
     val ruta: String,
@@ -69,7 +71,7 @@ private fun NavHostController.irATab(ruta: String) {
 }
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(haySesion: Boolean) {
     val nav = rememberNavController()
     val entradaActual by nav.currentBackStackEntryAsState()
     val rutaActual = entradaActual?.destination?.route
@@ -84,9 +86,17 @@ fun AppNavigation() {
     ) { padding ->
         NavHost(
             navController = nav,
-            startDestination = Rutas.SPLASH,
+            startDestination = if (haySesion) Rutas.SPLASH else Rutas.LOGIN,
             modifier = Modifier.padding(padding)
         ) {
+            // ---------- Cuenta ----------
+            composable(Rutas.LOGIN) {
+                LoginScreen(onRegistro = { nav.navigate(Rutas.REGISTRO) })
+            }
+            composable(Rutas.REGISTRO) {
+                RegistroScreen(onLogin = { nav.popBackStack() })
+            }
+
             // ---------- Flujo inicial ----------
             composable(Rutas.SPLASH) {
                 SplashScreen(onListo = { primeraVez ->
@@ -103,14 +113,6 @@ fun AppNavigation() {
                     nav.navigate(Rutas.CARGA_PDF) { popUpTo(nav.graph.id) { inclusive = true } }
                 })
             }
-
-            composable(Rutas.NOTIFICACIONES) {
-                NotificacionesScreen(
-                    onVolver = { nav.popBackStack() },
-                    onTarea = { nav.navigate(Rutas.detalleTarea(it)) }
-                )
-            }
-
             composable(Rutas.CARGA_PDF) {
                 CargaPdfScreen(
                     onVolver = { if (nav.previousBackStackEntry != null) nav.popBackStack() else nav.irAHoy() },
@@ -159,7 +161,12 @@ fun AppNavigation() {
             }
 
             // ---------- Pantallas secundarias ----------
-
+            composable(Rutas.NOTIFICACIONES) {
+                NotificacionesScreen(
+                    onVolver = { nav.popBackStack() },
+                    onTarea = { nav.navigate(Rutas.detalleTarea(it)) }
+                )
+            }
             composable(
                 Rutas.DETALLE_CLASE,
                 arguments = listOf(navArgument("claseId") { type = NavType.StringType })
