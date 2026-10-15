@@ -76,6 +76,8 @@ fun AppNavigation(haySesion: Boolean) {
     val entradaActual by nav.currentBackStackEntryAsState()
     val rutaActual = entradaActual?.destination?.route
     val mostrarBarra = tabs.any { it.ruta == rutaActual }
+    val esAuth = rutaActual == Rutas.LOGIN || rutaActual == Rutas.REGISTRO ||
+            (rutaActual == null && !haySesion)
 
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(Unit) { Avisos.flujo.collect { snackbar.showSnackbar(it) } }
@@ -87,7 +89,7 @@ fun AppNavigation(haySesion: Boolean) {
         NavHost(
             navController = nav,
             startDestination = if (haySesion) Rutas.SPLASH else Rutas.LOGIN,
-            modifier = Modifier.padding(padding)
+            modifier = if (esAuth) Modifier else Modifier.padding(padding)
         ) {
             // ---------- Cuenta ----------
             composable(Rutas.LOGIN) {

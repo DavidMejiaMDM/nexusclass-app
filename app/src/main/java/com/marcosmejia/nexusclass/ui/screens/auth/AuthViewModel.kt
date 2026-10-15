@@ -1,5 +1,6 @@
 package com.marcosmejia.nexusclass.ui.screens.auth
 
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marcosmejia.nexusclass.data.local.Sesion
@@ -44,9 +45,10 @@ class AuthViewModel : ViewModel() {
 
     fun registrar(nombre: String, email: String, password: String, confirmar: String) {
         if (_ui.value.cargando) return
+        val correo = email.trim()
         val errores = buildMap {
             if (nombre.trim().length < 2) put("nombre", "Escribe tu nombre")
-            if (!email.trim().contains("@") || !email.trim().contains(".")) put("email", "Escribe un correo válido")
+            if (!esCorreoInstitucional(correo)) put("email", MENSAJE_DOMINIO)
             if (password.length < 8) put("password", "Debe tener al menos 8 caracteres")
             if (confirmar != password) put("confirmar", "Las contraseñas no coinciden")
         }
@@ -55,7 +57,7 @@ class AuthViewModel : ViewModel() {
             return
         }
         _ui.update { Ui(cargando = true) }
-        viewModelScope.launch { resolver(repo.registrar(nombre.trim(), email.trim(), password)) }
+        viewModelScope.launch { resolver(repo.registrar(nombre.trim(), correo, password)) }
     }
 
     private fun resolver(r: Resultado<AuthResponse>) {
@@ -76,7 +78,16 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    private companion object {
-        val CAMPOS = setOf("nombre", "email", "password")
+    companion object {
+        const val DOMINIO = "@uniautonoma.edu.co"
+        const val MENSAJE_DOMINIO = "Usa tu correo institucional (termina en $DOMINIO)"
+
+        private val CAMPOS = setOf("nombre", "email", "password")
+
+        // La validación definitiva la hace la API; esta solo evita una llamada innecesaria
+        fun esCorreoInstitucional(correo: String): Boolean {
+            val c = correo.trim().lowercase()
+            return c.endsWith(DOMINIO) && c.length > DOMINIO.length && c.count { it == '@' } == 1
+        }
     }
 }
