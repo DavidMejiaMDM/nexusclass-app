@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 object Formato {
-    private val zona: ZoneId = ZoneId.of("America/Bogota")
+    private val zona: ZoneId get() = ZoneId.systemDefault()
     private val es: Locale = Locale.forLanguageTag("es-CO")
     private val fmtHora = DateTimeFormatter.ofPattern("h:mm a", Locale.US)
 
@@ -76,8 +76,16 @@ object Formato {
         return when {
             min < 0 -> "Vencida"
             min < 60 -> "Quedan $min min"
-            min < 48 * 60 -> "Quedan ${min / 60} h"
-            else -> "Quedan ${min / (24 * 60)} días"
+            min < 48 * 60 -> {
+                val h = min / 60
+                val m = min % 60
+                if (m == 0L) "Quedan $h h" else "Quedan $h h $m min"
+            }
+            else -> {
+                val d = min / (24 * 60)
+                val h = (min % (24 * 60)) / 60
+                if (h == 0L) "Quedan $d días" else "Quedan $d d $h h"
+            }
         }
     }
 

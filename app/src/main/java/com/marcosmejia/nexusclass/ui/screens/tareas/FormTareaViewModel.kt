@@ -26,7 +26,7 @@ class FormTareaViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
     private val tareaRepo = TareaRepository()
     private val claseRepo = ClaseRepository()
-    private val zona = ZoneId.of("America/Bogota")
+    private val zona: ZoneId get() = ZoneId.systemDefault()
 
     // Vienen de la ruta: form_tarea?claseId=...&tareaId=...
     private val tareaId: String? = savedStateHandle.get<String>("tareaId")
@@ -92,7 +92,7 @@ class FormTareaViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
                             fecha = z?.toLocalDate(),
                             hora = hora,
                             porcentaje = t.porcentaje?.toString() ?: "",
-                            modalidad = t.modalidad.orEmpty(),
+                            modalidad = normalizarModalidad(t.modalidad),
                             notas = t.notas.orEmpty(),
                             completada = t.completada
                         )
@@ -115,8 +115,10 @@ class FormTareaViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     fun setCompletada(v: Boolean) = _ui.update { it.copy(completada = v) }
 
     fun guardar() {
+
         val s = _ui.value
         if (s.guardando) return
+
 
         val fecha = s.fecha
         val hora = s.hora
@@ -125,6 +127,7 @@ class FormTareaViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
         // Solo validamos lo obligatorio. La regla de "fecha pasada" la aplica el servidor (HTTP 400).
         val errores = buildMap {
+            if (s.modalidad.isBlank()) put("modalidad", "Elige la modalidad")
             if (s.titulo.isBlank()) put("titulo", "El título es obligatorio")
             if (claseId == null) put("claseId", "Selecciona una asignatura")
             if (fecha == null || hora == null) put("fechaEntrega", "Elige la fecha y la hora de entrega")
@@ -190,4 +193,11 @@ class FormTareaViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     private companion object {
         val CAMPOS = setOf("titulo", "claseId", "fechaEntrega", "porcentaje")
     }
+
+    // Opciones permitidas para la modalidad de una tarea
+    val MODALIDADES_TAREA = listOf("Presencial", "Asistida")
+
+    // Si la tarea trae otro valor (por ejemplo "Campus Virtual", de pruebas antiguas), queda sin selección
+    private fun normalizarModalidad(valor: String?): String =
+        MODALIDADES_TAREA.firstOrNull { it.equals(valor?.trim(), ignoreCase = true) } ?: ""
 }

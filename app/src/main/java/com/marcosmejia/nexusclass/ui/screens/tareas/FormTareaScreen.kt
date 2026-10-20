@@ -59,6 +59,8 @@ import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneOffset
 
+
+private val OPCIONES_MODALIDAD = listOf("Presencial", "Asistida")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FormTareaScreen(
@@ -174,7 +176,19 @@ fun FormTareaScreen(
                     error = ui.errores["porcentaje"],
                     teclado = KeyboardType.Number
                 )
-                Campo(valor = ui.modalidad, onCambio = vm::setModalidad, etiqueta = "Modalidad (opcional)")
+                // Modalidad: solo se puede elegir una de dos opciones
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Modalidad (opcional)", style = MaterialTheme.typography.labelLarge)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OPCIONES_MODALIDAD.forEach { opcion ->
+                            FilterChip(
+                                selected = ui.modalidad == opcion,
+                                onClick = { vm.setModalidad(if (ui.modalidad == opcion) "" else opcion) },
+                                label = { Text(opcion) }
+                            )
+                        }
+                    }
+                }
                 Campo(
                     valor = ui.notas,
                     onCambio = vm::setNotas,

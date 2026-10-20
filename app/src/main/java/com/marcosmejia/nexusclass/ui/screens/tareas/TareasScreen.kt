@@ -53,7 +53,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-private val ZONA: ZoneId = ZoneId.of("America/Bogota")
+private val ZONA: ZoneId get() = ZoneId.systemDefault()
 private val ORDEN = listOf("Vencidas", "Hoy", "Mañana", "Esta semana", "Más adelante", "Completadas")
 
 private val OPCIONES_ESTADO = listOf(
