@@ -2,6 +2,7 @@ package com.marcosmejia.nexusclass.ui.screens.hoy
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marcosmejia.nexusclass.data.local.Sesion
 import com.marcosmejia.nexusclass.data.remote.Resultado
 import com.marcosmejia.nexusclass.data.remote.TareaDto
 import com.marcosmejia.nexusclass.data.remote.TodayResponse
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
 
 class HoyViewModel(
     private val claseRepo: ClaseRepository = ClaseRepository(),
@@ -36,13 +38,15 @@ class HoyViewModel(
     private val _refrescando = MutableStateFlow(false)
     val refrescando: StateFlow<Boolean> = _refrescando.asStateFlow()
 
+    // La sesión a la que pertenece este ViewModel: si cambia (otra persona entró), deja de refrescar
+    private val sesionDeEsteViewModel = Sesion.usuario.value?.id
+
     init {
         cargar()
-        // Cada minuto se actualiza solo: avanzan la cuenta regresiva y la barra de progreso
         viewModelScope.launch {
-            while (true) {
+            while (Sesion.usuario.value?.id == sesionDeEsteViewModel) {
                 delay(60_000)
-                silencioso()
+                if (Sesion.usuario.value?.id == sesionDeEsteViewModel) silencioso()
             }
         }
     }

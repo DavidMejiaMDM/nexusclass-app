@@ -48,4 +48,11 @@ object Preferencias {
         val nuevo = if (actual.size > 300) setOf(clave) else actual + clave
         sp?.edit()?.putStringSet("notificadas", nuevo)?.apply()
     }
+
+    // Borra lo que pertenece a la persona que cerró sesión.
+    // Se conservan las preferencias del dispositivo: tema, alertas, anticipación y onboarding.
+    fun limpiarDatosDeUsuario() {
+        sp?.edit()?.remove("notificadas")?.remove("nombre")?.commit()
+        _nombre.value = ""
+    }
 }

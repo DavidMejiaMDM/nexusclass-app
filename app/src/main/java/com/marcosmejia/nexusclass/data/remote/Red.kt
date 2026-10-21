@@ -24,7 +24,7 @@ object Red {
 
         // 401 con sesión abierta = token vencido o cuenta eliminada -> volver al login
         if (respuesta.code == 401 && token != null && !original.url.encodedPath.endsWith("/auth/login")) {
-            Sesion.cerrar()
+            Sesion.cerrarSiEs(token)
         }
         respuesta
     }
