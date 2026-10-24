@@ -34,6 +34,7 @@ import com.marcosmejia.nexusclass.ui.screens.hoy.HoyScreen
 import com.marcosmejia.nexusclass.ui.screens.inicio.OnboardingScreen
 import com.marcosmejia.nexusclass.ui.screens.inicio.SplashScreen
 import com.marcosmejia.nexusclass.ui.screens.notificaciones.NotificacionesScreen
+import com.marcosmejia.nexusclass.ui.screens.perfil.PerfilScreen
 import com.marcosmejia.nexusclass.ui.screens.tareas.DetalleTareaScreen
 import com.marcosmejia.nexusclass.ui.screens.tareas.FormTareaScreen
 import com.marcosmejia.nexusclass.ui.screens.tareas.TareasScreen
@@ -87,10 +88,18 @@ fun AppNavigation(haySesion: Boolean) {
         bottomBar = { if (mostrarBarra) BarraInferior(nav, rutaActual) }
     ) { padding ->
         NavHost(
+
             navController = nav,
             startDestination = if (haySesion) Rutas.SPLASH else Rutas.LOGIN,
             modifier = if (esAuth) Modifier else Modifier.padding(padding)
+
         ) {
+
+            // --- perfil ----
+            composable(Rutas.PERFIL) {
+                PerfilScreen(onVolver = { nav.popBackStack() })
+            }
+
             // ---------- Cuenta ----------
             composable(Rutas.LOGIN) {
                 LoginScreen(onRegistro = { nav.navigate(Rutas.REGISTRO) })
@@ -156,10 +165,13 @@ fun AppNavigation(haySesion: Boolean) {
                 )
             }
             composable(Rutas.AJUSTES) {
+
                 AjustesScreen(
+                    onPerfil = { nav.navigate(Rutas.PERFIL) },
                     onCargarHorario = { nav.navigate(Rutas.CARGA_PDF) },
                     onNuevaClase = { nav.navigate(Rutas.formClase()) }
                 )
+
             }
 
             // ---------- Pantallas secundarias ----------

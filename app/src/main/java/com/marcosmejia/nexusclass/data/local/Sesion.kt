@@ -11,10 +11,8 @@ import org.json.JSONObject
 
 object Sesion {
     data class Usuario(val id: String, val nombre: String, val email: String)
-
     private const val ARCHIVO = "nexusclass_sesion"
     private const val CLAVE_CIFRADA = "sesion_cifrada"
-
     private var sp: SharedPreferences? = null
     private var contexto: Context? = null
 
@@ -75,7 +73,10 @@ object Sesion {
         }
         token = nuevoToken
         _usuario.value = u
+
     }
+
+
 
     /**
      * Cierra la sesión y limpia lo que quedó de esta persona en el teléfono:
@@ -106,5 +107,12 @@ object Sesion {
     @Synchronized
     fun cerrarSiEs(tokenUsado: String) {
         if (token == tokenUsado) cerrar()
+    }
+
+    // Cambia los datos de la persona (ej. su nombre) sin tocar el token
+    @Synchronized
+    fun actualizarUsuario(u: Usuario) {
+        val t = token ?: return
+        guardar(t, u)
     }
 }

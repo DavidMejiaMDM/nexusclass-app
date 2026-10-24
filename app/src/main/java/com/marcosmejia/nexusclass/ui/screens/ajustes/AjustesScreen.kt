@@ -1,8 +1,13 @@
 package com.marcosmejia.nexusclass.ui.screens.ajustes
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -24,10 +29,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.UploadFile
+import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -50,18 +59,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.IntentCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.marcosmejia.nexusclass.data.local.Preferencias
 import com.marcosmejia.nexusclass.data.local.Sesion
 import com.marcosmejia.nexusclass.notifications.Alertas
+import com.marcosmejia.nexusclass.notifications.Notificador
 import com.marcosmejia.nexusclass.ui.components.DialogoConfirmar
 import com.marcosmejia.nexusclass.ui.theme.RojoError
 import com.marcosmejia.nexusclass.ui.util.Avisos
 
 @Composable
 fun AjustesScreen(
+    onPerfil: () -> Unit,
     onCargarHorario: () -> Unit,
     onNuevaClase: () -> Unit,
     vm: AjustesViewModel = viewModel()
@@ -71,12 +84,15 @@ fun AjustesScreen(
     val tema by Preferencias.tema.collectAsStateWithLifecycle()
     val notif by Preferencias.notificaciones.collectAsStateWithLifecycle()
     val horas by Preferencias.anticipacionHoras.collectAsStateWithLifecycle()
+    val sonido by Preferencias.sonido.collectAsStateWithLifecycle()
+    val vibracion by Preferencias.vibracion.collectAsStateWithLifecycle()
     val eliminando by vm.eliminando.collectAsStateWithLifecycle()
 
     var dialogoAcerca by remember { mutableStateOf(false) }
     var dialogoSalir by remember { mutableStateOf(false) }
     var dialogoBorrar by remember { mutableStateOf(false) }
 
+    // ---------- Permiso de notificaciones (Android 13+) ----------
     val permiso = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
         if (!ok) Avisos.mostrar("Sin el permiso no podremos mostrarte las alertas")
     }
@@ -91,6 +107,48 @@ fun AjustesScreen(
         }
     }
 
+    // ---------- Selector de sonido (el mismo de los ajustes del teléfono) ----------
+    val selectorSonido = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { resultado ->
+        if (resultado.resultCode == Activity.RESULT_OK) {
+            val uri = resultado.data?.let {
+                IntentCompat.getParcelableExtra(it, RingtoneManager.EXTRA_RINGTONE_PICKED_URI, Uri::class.java)
+            }
+            val valor = when {
+                uri == null -> Preferencias.SONIDO_SILENCIO                              // eligió "Ninguno"
+                uri == Settings.System.DEFAULT_NOTIFICATION_URI -> Preferencias.SONIDO_PREDETERMINADO
+                else -> uri.toString()
+            }
+            Preferencias.setSonido(valor)
+            Notificador.crearCanal(contexto)    // el sonido pertenece al canal: se crea uno nuevo con el sonido elegido
+        }
+    }
+
+    fun elegirSonido() {
+        val actual: Uri? = when (sonido) {
+            Preferencias.SONIDO_PREDETERMINADO -> Settings.System.DEFAULT_NOTIFICATION_URI
+            Preferencias.SONIDO_SILENCIO -> null
+            else -> Uri.parse(sonido)
+        }
+        val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+            putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION)
+            putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Sonido de las alertas")
+            putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+            putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, true)
+            putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, actual)
+        }
+        selectorSonido.launch(intent)
+    }
+
+    fun probarSonido() {
+        if (!NotificationManagerCompat.from(contexto).areNotificationsEnabled()) {
+            Avisos.mostrar("Activa las notificaciones de la app en los ajustes del teléfono")
+            return
+        }
+        Notificador.enviar(contexto, 9001, "Así sonará tu alerta", "Esta es una notificación de prueba.")
+    }
+
+    val nombreSonido = remember(sonido) { Notificador.nombreDelSonido(contexto, sonido) }
+
     val nombre = usuario?.nombre.orEmpty()
     val iniciales = nombre.trim().split(" ").filter { it.isNotEmpty() }
         .take(2).joinToString("") { it.first().uppercase() }.ifEmpty { "UA" }
@@ -104,10 +162,10 @@ fun AjustesScreen(
     ) {
         Text("Ajustes", style = MaterialTheme.typography.headlineMedium)
 
-        // ----- Perfil (datos de la cuenta) -----
+        // ----- Perfil: toca para editar nombre y contraseña -----
         Panel {
             Row(
-                Modifier.fillMaxWidth().padding(16.dp),
+                Modifier.fillMaxWidth().clickable(onClick = onPerfil).padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -124,7 +182,13 @@ fun AjustesScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Text(
+                        "Editar nombre y contraseña",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
+                Icon(Icons.Outlined.ChevronRight, contentDescription = null)
             }
         }
 
@@ -148,7 +212,7 @@ fun AjustesScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Switch(checked = notif, onCheckedChange = ::alternarNotificaciones)
+                Switch(checked = notif, onCheckedChange = { alternarNotificaciones(it) })
             }
             HorizontalDivider()
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -164,6 +228,43 @@ fun AjustesScreen(
                     }
                 }
             }
+            HorizontalDivider()
+            FilaAccion(
+                Icons.Outlined.MusicNote,
+                "Sonido de las alertas",
+                nombreSonido,
+                onClick = { elegirSonido() }
+            )
+            HorizontalDivider()
+            Row(
+                Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Icon(Icons.Outlined.Vibration, contentDescription = null)
+                Column(Modifier.weight(1f)) {
+                    Text("Vibración", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Vibrar cuando llegue una alerta.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = vibracion,
+                    onCheckedChange = {
+                        Preferencias.setVibracion(it)
+                        Notificador.crearCanal(contexto)
+                    }
+                )
+            }
+            HorizontalDivider()
+            FilaAccion(
+                Icons.Outlined.PlayArrow,
+                "Probar sonido",
+                "Envía una notificación de prueba",
+                onClick = { probarSonido() }
+            )
             HorizontalDivider()
             FilaAccion(
                 Icons.Outlined.NotificationsActive,

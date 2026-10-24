@@ -3,6 +3,8 @@ package com.marcosmejia.nexusclass.data.remote
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.POST
+import retrofit2.http.PATCH
+import retrofit2.http.PUT
 
 interface AuthApi {
     @POST("auth/register")
@@ -13,4 +15,12 @@ interface AuthApi {
 
     @DELETE("auth/me")
     suspend fun eliminarCuenta(): MensajeResponse
+
+    //cambiar nombre y contraseña
+
+    @PATCH("auth/me")
+    suspend fun actualizarPerfil(@Body cuerpo: PerfilRequest): PerfilResponse
+
+    @PUT("auth/password")
+    suspend fun cambiarPassword(@Body cuerpo: CambioPasswordRequest): AuthResponse
 }

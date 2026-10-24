@@ -10,11 +10,16 @@ object Rutas {
     const val CARGA_PDF = "carga_pdf"
     const val REVISION = "revision"
 
+
     const val HOY = "hoy"
     const val HORARIO = "horario"
     const val TAREAS = "tareas"
     const val AJUSTES = "ajustes"
     const val NOTIFICACIONES = "notificaciones"
+
+    //perfil
+
+    const val PERFIL = "perfil"
 
     // Rutas con parámetros
     const val DETALLE_CLASE = "clase/{claseId}"
