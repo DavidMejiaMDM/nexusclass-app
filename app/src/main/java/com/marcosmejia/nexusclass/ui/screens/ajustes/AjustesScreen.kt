@@ -310,7 +310,7 @@ fun AjustesScreen(
     if (dialogoAcerca) {
         AlertDialog(
             onDismissRequest = { dialogoAcerca = false },
-            title = { Text("Organizador UA") },
+            title = { Text("Organizador NexusClass") },
             text = {
                 Text(
                     "Organizador Inteligente de Clases y Tareas NexusClass\nVersión 1.3.0\n\n" +
