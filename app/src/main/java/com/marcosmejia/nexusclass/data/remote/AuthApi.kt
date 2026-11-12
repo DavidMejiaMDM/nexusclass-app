@@ -7,6 +7,12 @@ import retrofit2.http.PATCH
 import retrofit2.http.PUT
 
 interface AuthApi {
+
+    @POST("auth/forgot-password")
+    suspend fun olvidePassword(@Body cuerpo: OlvidePasswordRequest): OlvideResponse
+
+    @POST("auth/reset-password")
+    suspend fun restablecerPassword(@Body cuerpo: RestablecerRequest): AuthResponse
     @POST("auth/register")
     suspend fun registrar(@Body cuerpo: RegistroRequest): AuthResponse
 

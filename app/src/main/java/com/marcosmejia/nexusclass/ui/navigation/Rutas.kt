@@ -1,6 +1,9 @@
 package com.marcosmejia.nexusclass.ui.navigation
 
 object Rutas {
+
+    const val RECUPERAR = "recuperar"
+    const val RESTABLECER = "restablecer"
     const val SPLASH = "splash"
 
     const val LOGIN = "login"

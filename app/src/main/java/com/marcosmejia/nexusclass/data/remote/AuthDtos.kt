@@ -13,3 +13,9 @@ data class PerfilRequest(val nombre: String)
 data class PerfilResponse(val usuario: UsuarioDto)
 
 data class CambioPasswordRequest(val passwordActual: String, val passwordNueva: String)
+
+data class OlvidePasswordRequest(val email: String)
+
+data class OlvideResponse(val mensaje: String, val reenviarEnSegundos: Int = 60)
+
+data class RestablecerRequest(val email: String, val codigo: String, val passwordNueva: String)

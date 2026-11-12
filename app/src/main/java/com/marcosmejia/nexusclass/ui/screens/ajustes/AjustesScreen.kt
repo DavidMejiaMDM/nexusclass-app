@@ -313,7 +313,7 @@ fun AjustesScreen(
             title = { Text("Organizador UA") },
             text = {
                 Text(
-                    "Organizador Inteligente de Clases y Tareas\nVersión 1.0\n\n" +
+                    "Organizador Inteligente de Clases y Tareas NexusClass\nVersión 1.3.0\n\n" +
                             "Desarrollado por Marcos David Mejía Escobar\nDocente: Zulema León\n" +
                             "Corporación Universitaria Autónoma del Cauca"
                 )

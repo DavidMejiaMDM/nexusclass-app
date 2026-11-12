@@ -97,7 +97,6 @@ import com.marcosmejia.nexusclass.ui.theme.RojoClaro
 import com.marcosmejia.nexusclass.ui.theme.RojoError
 import com.marcosmejia.nexusclass.ui.theme.TextoPrincipal
 import com.marcosmejia.nexusclass.ui.theme.VerdeExito
-
 private val FormaCampo = RoundedCornerShape(14.dp)
 
 // =====================================================================
@@ -105,7 +104,7 @@ private val FormaCampo = RoundedCornerShape(14.dp)
 // =====================================================================
 
 @Composable
-fun LoginScreen(onRegistro: () -> Unit, vm: AuthViewModel = viewModel()) {
+fun LoginScreen(onRegistro: () -> Unit, onOlvide: () -> Unit, vm: AuthViewModel = viewModel()) {
     val ui by vm.ui.collectAsStateWithLifecycle()
     var email by rememberSaveable { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -130,6 +129,10 @@ fun LoginScreen(onRegistro: () -> Unit, vm: AuthViewModel = viewModel()) {
             imeAction = ImeAction.Done,
             onAccion = { vm.entrar(email, password) }
         )
+
+        TextButton(onClick = onOlvide, modifier = Modifier.align(Alignment.End)) {
+            Text("¿Olvidaste tu contraseña?")
+        }
 
         AvisoError(ui.errorGeneral)
 
@@ -214,7 +217,7 @@ fun RegistroScreen(onLogin: () -> Unit, vm: AuthViewModel = viewModel()) {
 // =====================================================================
 
 @Composable
-private fun MarcoAuth(compacta: Boolean, contenido: @Composable ColumnScope.() -> Unit) {
+internal fun MarcoAuth(compacta: Boolean, contenido: @Composable ColumnScope.() -> Unit) {
     BarraDeEstadoClara()
 
     // Entrada suave: aparece con un leve desplazamiento hacia arriba
@@ -269,14 +272,14 @@ private fun MarcoAuth(compacta: Boolean, contenido: @Composable ColumnScope.() -
             LogoApp(if (compacta) 68.dp else 88.dp)
             Spacer(Modifier.height(14.dp))
             Text(
-                "Nexus Class",
+                "Organizador UA",
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.White,
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                "Tu mejor aliado",
+                "Uniautónoma del Cauca",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center
@@ -382,7 +385,7 @@ private fun Context.buscarActividad(): Activity? {
 // =====================================================================
 
 @Composable
-private fun Titulo(titulo: String, subtitulo: String) {
+internal fun Titulo(titulo: String, subtitulo: String) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -405,7 +408,7 @@ private fun Titulo(titulo: String, subtitulo: String) {
 }
 
 @Composable
-private fun CampoTexto(
+internal fun CampoTexto(
     valor: String,
     onCambio: (String) -> Unit,
     etiqueta: String,
@@ -435,7 +438,7 @@ private fun CampoTexto(
 }
 
 @Composable
-private fun CampoClave(
+internal fun CampoClave(
     valor: String,
     onCambio: (String) -> Unit,
     etiqueta: String,
@@ -476,7 +479,7 @@ private fun CampoClave(
 
 // Botón con degradado azul (se ve bien en tema claro y oscuro)
 @Composable
-private fun BotonPrincipal(texto: String, cargando: Boolean, onClick: () -> Unit) {
+internal fun BotonPrincipal(texto: String, cargando: Boolean, onClick: () -> Unit) {
     val forma = RoundedCornerShape(16.dp)
     Button(
         onClick = { if (!cargando) onClick() },
@@ -511,7 +514,7 @@ private fun BotonPrincipal(texto: String, cargando: Boolean, onClick: () -> Unit
 }
 
 @Composable
-private fun EnlaceCambio(pregunta: String, accion: String, onClick: () -> Unit) {
+internal fun EnlaceCambio(pregunta: String, accion: String, onClick: () -> Unit) {
     TextButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Text(
             buildAnnotatedString {
@@ -545,7 +548,7 @@ private fun AvisoDominio() {
 }
 
 @Composable
-private fun AvisoError(mensaje: String?) {
+internal fun AvisoError(mensaje: String?) {
     if (mensaje == null) return
     Row(
         modifier = Modifier
@@ -563,7 +566,7 @@ private fun AvisoError(mensaje: String?) {
 
 // Medidor de seguridad de la contraseña (solo orienta: el requisito real es 8 caracteres)
 @Composable
-private fun IndicadorFuerza(password: String) {
+internal fun IndicadorFuerza(password: String) {
     if (password.isEmpty()) return
     val nivel = nivelClave(password)
     val (texto, color) = when (nivel) {

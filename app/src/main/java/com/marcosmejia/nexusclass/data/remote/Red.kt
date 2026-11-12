@@ -12,7 +12,7 @@ object Red {
 
     const val BASE_URL = "https://organizador-api-g3vc.onrender.com/api/v1/"
 
-    // Agrega "Authorization: Bearer <token>" a cada petición
+    // Agrega "Authorization: Bearer <token>" Para cada petición
     private val autenticacion = Interceptor { chain ->
         val original = chain.request()
         val token = Sesion.token
@@ -31,7 +31,6 @@ object Red {
 
     private val registro = HttpLoggingInterceptor().apply {
         // BASIC no imprime los cuerpos, así las contraseñas no quedan en el Logcat.
-        // Para depurar un problema, cámbialo temporalmente a Level.BODY.
         level = HttpLoggingInterceptor.Level.BASIC
         redactHeader("Authorization")
     }

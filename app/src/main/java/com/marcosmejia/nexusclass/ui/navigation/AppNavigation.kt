@@ -10,8 +10,20 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Today
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
@@ -24,7 +36,9 @@ import androidx.navigation.navArgument
 import com.marcosmejia.nexusclass.data.local.Preferencias
 import com.marcosmejia.nexusclass.ui.screens.ajustes.AjustesScreen
 import com.marcosmejia.nexusclass.ui.screens.auth.LoginScreen
+import com.marcosmejia.nexusclass.ui.screens.auth.RecuperarScreen
 import com.marcosmejia.nexusclass.ui.screens.auth.RegistroScreen
+import com.marcosmejia.nexusclass.ui.screens.auth.RestablecerScreen
 import com.marcosmejia.nexusclass.ui.screens.carga.CargaPdfScreen
 import com.marcosmejia.nexusclass.ui.screens.carga.RevisionScreen
 import com.marcosmejia.nexusclass.ui.screens.clase.ClaseFormScreen
@@ -77,8 +91,14 @@ fun AppNavigation(haySesion: Boolean) {
     val entradaActual by nav.currentBackStackEntryAsState()
     val rutaActual = entradaActual?.destination?.route
     val mostrarBarra = tabs.any { it.ruta == rutaActual }
+
+    // En las pantallas de acceso el degradado ocupa toda la pantalla (incluida la barra de estado)
     val esAuth = rutaActual == Rutas.LOGIN || rutaActual == Rutas.REGISTRO ||
+            rutaActual == Rutas.RECUPERAR || rutaActual == Rutas.RESTABLECER ||
             (rutaActual == null && !haySesion)
+
+    // Correo al que se envió el código de recuperación (sobrevive a la rotación de pantalla)
+    var emailRecuperacion by rememberSaveable { mutableStateOf("") }
 
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(Unit) { Avisos.flujo.collect { snackbar.showSnackbar(it) } }
@@ -88,24 +108,34 @@ fun AppNavigation(haySesion: Boolean) {
         bottomBar = { if (mostrarBarra) BarraInferior(nav, rutaActual) }
     ) { padding ->
         NavHost(
-
             navController = nav,
             startDestination = if (haySesion) Rutas.SPLASH else Rutas.LOGIN,
             modifier = if (esAuth) Modifier else Modifier.padding(padding)
-
         ) {
-
-            // --- perfil ----
-            composable(Rutas.PERFIL) {
-                PerfilScreen(onVolver = { nav.popBackStack() })
-            }
-
             // ---------- Cuenta ----------
             composable(Rutas.LOGIN) {
-                LoginScreen(onRegistro = { nav.navigate(Rutas.REGISTRO) })
+                LoginScreen(
+                    onRegistro = { nav.navigate(Rutas.REGISTRO) },
+                    onOlvide = { nav.navigate(Rutas.RECUPERAR) }
+                )
             }
             composable(Rutas.REGISTRO) {
                 RegistroScreen(onLogin = { nav.popBackStack() })
+            }
+            composable(Rutas.RECUPERAR) {
+                RecuperarScreen(
+                    onVolver = { nav.popBackStack() },
+                    onCodigoEnviado = { correo ->
+                        emailRecuperacion = correo
+                        nav.navigate(Rutas.RESTABLECER)
+                    }
+                )
+            }
+            composable(Rutas.RESTABLECER) {
+                RestablecerScreen(
+                    email = emailRecuperacion,
+                    onVolver = { nav.popBackStack() }
+                )
             }
 
             // ---------- Flujo inicial ----------
@@ -165,16 +195,17 @@ fun AppNavigation(haySesion: Boolean) {
                 )
             }
             composable(Rutas.AJUSTES) {
-
                 AjustesScreen(
                     onPerfil = { nav.navigate(Rutas.PERFIL) },
                     onCargarHorario = { nav.navigate(Rutas.CARGA_PDF) },
                     onNuevaClase = { nav.navigate(Rutas.formClase()) }
                 )
-
             }
 
             // ---------- Pantallas secundarias ----------
+            composable(Rutas.PERFIL) {
+                PerfilScreen(onVolver = { nav.popBackStack() })
+            }
             composable(Rutas.NOTIFICACIONES) {
                 NotificacionesScreen(
                     onVolver = { nav.popBackStack() },

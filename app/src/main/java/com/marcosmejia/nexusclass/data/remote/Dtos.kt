@@ -4,8 +4,8 @@ import com.google.gson.annotations.SerializedName
 
 // ---------- Clases / asignaturas ----------
 data class HorarioDto(
-    val diaSemana: String,   // LUNES ... DOMINGO
-    val horaInicio: String,  // "10:00"
+    val diaSemana: String,   // LUNES A VIERNES: NOTA DEBO QUITAR SABADO Y DOMINGO
+    val horaInicio: String,  // "00:00"
     val horaFin: String
 )
 
