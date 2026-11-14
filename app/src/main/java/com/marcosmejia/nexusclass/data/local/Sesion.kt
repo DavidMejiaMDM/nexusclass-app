@@ -87,6 +87,7 @@ object Sesion {
      */
     @Synchronized
     fun cerrar() {
+        CacheLocal.limpiar()
         token = null
         _usuario.value = null
         sp?.edit()?.clear()?.commit()

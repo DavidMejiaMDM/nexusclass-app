@@ -53,6 +53,7 @@ import com.marcosmejia.nexusclass.ui.screens.tareas.DetalleTareaScreen
 import com.marcosmejia.nexusclass.ui.screens.tareas.FormTareaScreen
 import com.marcosmejia.nexusclass.ui.screens.tareas.TareasScreen
 import com.marcosmejia.nexusclass.ui.util.Avisos
+import com.marcosmejia.nexusclass.ui.components.BannerSinConexion
 
 private data class TabItem(
     val ruta: String,
@@ -104,6 +105,7 @@ fun AppNavigation(haySesion: Boolean) {
     LaunchedEffect(Unit) { Avisos.flujo.collect { snackbar.showSnackbar(it) } }
 
     Scaffold(
+        topBar = { BannerSinConexion() },
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = { if (mostrarBarra) BarraInferior(nav, rutaActual) }
     ) { padding ->

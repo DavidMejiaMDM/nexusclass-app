@@ -16,12 +16,17 @@ import com.marcosmejia.nexusclass.notifications.Notificador
 import com.marcosmejia.nexusclass.ui.navigation.AppNavigation
 import com.marcosmejia.nexusclass.ui.theme.NexusClassTheme
 
+import com.marcosmejia.nexusclass.data.local.CacheLocal
+import com.marcosmejia.nexusclass.data.repository.ClaseRepository
+import com.marcosmejia.nexusclass.data.repository.TareaRepository
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         Preferencias.iniciar(this)
         Sesion.iniciar(this)
+        CacheLocal.iniciar(this)
         Notificador.crearCanal(this)
 
         setContent {
@@ -36,8 +41,16 @@ class MainActivity : ComponentActivity() {
 
             // Las alertas solo existen mientras haya una sesión abierta
             LaunchedEffect(alertas, usuario?.id) {
+
                 if (alertas && usuario != null) Alertas.programar(applicationContext)
                 else Alertas.cancelar(applicationContext)
+            }
+            // Con sesión abierta e internet, se guarda una copia fresca para usarla sin conexión
+            LaunchedEffect(usuario?.id) {
+                if (usuario != null) {
+                    ClaseRepository().listar()
+                    TareaRepository().listar()
+                }
             }
 
             NexusClassTheme(darkTheme = oscuro) {
